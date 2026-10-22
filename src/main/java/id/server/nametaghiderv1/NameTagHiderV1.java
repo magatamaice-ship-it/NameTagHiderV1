@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -20,6 +21,7 @@ public class NameTagHiderV1 extends JavaPlugin implements Listener {
         scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
         hiddenTeam = scoreboard.getTeam("nthv1");
+
         if (hiddenTeam == null) {
             hiddenTeam = scoreboard.registerNewTeam("nthv1");
         }
@@ -31,17 +33,30 @@ public class NameTagHiderV1 extends JavaPlugin implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, this);
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            hideNametag(player);
-        }
+        // Terapkan pengaturan secara berkala
+        Bukkit.getScheduler().runTaskTimer(
+                this,
+                this::updateAllPlayers,
+                1L,
+                20L
+        );
 
         getLogger().info("NameTagHiderV1 aktif!");
     }
 
+    private void updateAllPlayers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            hideNametag(player);
+        }
+    }
+
     private void hideNametag(Player player) {
-        player.setScoreboard(scoreboard);
+        if (player.getScoreboard() != scoreboard) {
+            player.setScoreboard(scoreboard);
+        }
 
         Team currentTeam = scoreboard.getEntryTeam(player.getName());
+
         if (currentTeam != null && currentTeam != hiddenTeam) {
             currentTeam.removeEntry(player.getName());
         }
@@ -51,6 +66,19 @@ public class NameTagHiderV1 extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        hideNametag(event.getPlayer());
+        Bukkit.getScheduler().runTaskLater(
+                this,
+                this::updateAllPlayers,
+                1L
+        );
+    }
+
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        Bukkit.getScheduler().runTaskLater(
+                this,
+                this::updateAllPlayers,
+                1L
+        );
     }
 }
