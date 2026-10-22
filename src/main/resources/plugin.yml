@@ -1,0 +1,6 @@
+
+name: NameTagHiderV1
+version: '1.0.0'
+main: id.server.nametaghiderv1.NameTagHiderV1
+api-version: '1.21'
+description: Hides player nametags in all worlds.
